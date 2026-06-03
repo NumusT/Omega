@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1056265928852",
+    "project_id": "orden-de-compra-omega",
+    "storage_bucket": "orden-de-compra-omega.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056265928852:android:a7dbc8fa1dae5ce5ccf481",
+        "android_client_info": {
+          "package_name": "com.omega.ordencompra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7z0xt9lm8zSkC7HtgMM91R9EU0P4CwE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
