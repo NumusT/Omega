@@ -23,6 +23,7 @@ import com.omega.ordencompra.ui.screens.MainScaffold
 import com.omega.ordencompra.ui.screens.NewOrderScreen
 import com.omega.ordencompra.ui.screens.ReportesScreen
 import com.omega.ordencompra.ui.screens.SuccessScreen
+import com.omega.ordencompra.ui.screens.RegistroPagoScreen
 import com.omega.ordencompra.ui.screens.admin.GestionClientesScreen
 import com.omega.ordencompra.ui.screens.admin.GestionProductosScreen
 import com.omega.ordencompra.ui.screens.admin.GestionUsuariosScreen
@@ -43,6 +44,7 @@ object Routes {
     const val ADMIN_PRODUCTOS = "admin_productos"
     const val ADMIN_CLIENTES = "admin_clientes"
     const val ADMIN_USUARIOS = "admin_usuarios"
+    const val REGISTRO_PAGO = "registro_pago"
 
     fun detalleOrden(ordenId: String) = "detalle_orden/$ordenId"
     fun success(ordenId: String) = "success/$ordenId"
@@ -86,6 +88,7 @@ fun NavGraph(
                         1 -> navController.navigate(Routes.LISTA_ORDENES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                         2 -> navController.navigate(Routes.INVENTARIO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                         3 -> navController.navigate(Routes.CLIENTES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
+                        4 -> navController.navigate(Routes.REGISTRO_PAGO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                     }
                 }
             ) { modifier ->
@@ -105,6 +108,7 @@ fun NavGraph(
                         },
                         onNavigateToProductos = { navController.navigate(Routes.ADMIN_PRODUCTOS) },
                         onNavigateToReportes = { navController.navigate(Routes.REPORTES) },
+                        onRegistroPago = { navController.navigate(Routes.REGISTRO_PAGO) },
                         onLogout = {
                             authViewModel.logout()
                             navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
@@ -124,6 +128,7 @@ fun NavGraph(
                         0 -> navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.DASHBOARD) { inclusive = true }; launchSingleTop = true }
                         2 -> navController.navigate(Routes.INVENTARIO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                         3 -> navController.navigate(Routes.CLIENTES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
+                        4 -> navController.navigate(Routes.REGISTRO_PAGO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                     }
                 }
             ) { modifier ->
@@ -149,6 +154,7 @@ fun NavGraph(
                         0 -> navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.DASHBOARD) { inclusive = true }; launchSingleTop = true }
                         1 -> navController.navigate(Routes.LISTA_ORDENES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                         3 -> navController.navigate(Routes.CLIENTES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
+                        4 -> navController.navigate(Routes.REGISTRO_PAGO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                     }
                 }
             ) { modifier ->
@@ -172,6 +178,7 @@ fun NavGraph(
                         0 -> navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.DASHBOARD) { inclusive = true }; launchSingleTop = true }
                         1 -> navController.navigate(Routes.LISTA_ORDENES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                         2 -> navController.navigate(Routes.INVENTARIO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
+                        4 -> navController.navigate(Routes.REGISTRO_PAGO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
                     }
                 }
             ) { modifier ->
@@ -256,6 +263,30 @@ fun NavGraph(
                 currentUserId = currentUser?.id ?: "",
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+        composable(Routes.REGISTRO_PAGO) {
+            currentTab = 4
+            MainScaffold(
+                currentTab = currentTab,
+                onTabChange = { tab ->
+                    currentTab = tab
+                    when (tab) {
+                        0 -> navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.DASHBOARD) { inclusive = true }; launchSingleTop = true }
+                        1 -> navController.navigate(Routes.LISTA_ORDENES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
+                        2 -> navController.navigate(Routes.INVENTARIO) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
+                        3 -> navController.navigate(Routes.CLIENTES) { popUpTo(Routes.DASHBOARD) { inclusive = false }; launchSingleTop = true }
+                    }
+                }
+            ) { modifier ->
+                androidx.compose.foundation.layout.Box(modifier = modifier) {
+                    RegistroPagoScreen(
+                        ordenViewModel = ordenViewModel,
+                        vendedorNombre = currentUser?.nombreCompleto ?: currentUser?.username ?: "",
+                        vendedorId = currentUser?.id ?: "",
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,10 +38,8 @@ class AuthViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repo.getUserByUsername("admin").onSuccess { user ->
-                if (user == null) {
-                    repo.insertUser(UserEntity(username = "admin", password = "admin", rol = "admin", nombreCompleto = "Administrador"))
-                }
+            if (repo.getUsers().first().isEmpty()) {
+                repo.insertUser(UserEntity(username = "admin", password = "admin", rol = "admin", nombreCompleto = "Administrador"))
             }
         }
         // Auto-login on startup if remember me is active

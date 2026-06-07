@@ -149,7 +149,7 @@ fun GestionClientesScreen(
                 item {
                     OutlinedTextField(
                         value = search,
-                        onValueChange = { adminViewModel.searchClientes(it) },
+                        onValueChange = { adminViewModel.searchClientes(it.uppercase()) },
                         placeholder = { Text("Buscar por nombre...") },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
@@ -321,35 +321,35 @@ private fun ClienteDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = nombre,
-                    onValueChange = { nombre = it },
+                    onValueChange = { nombre = it.uppercase() },
                     label = { Text("Nombre") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = rif,
-                    onValueChange = { rif = it },
+                    onValueChange = { rif = it.uppercase() },
                     label = { Text("RIF") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = telefono,
-                    onValueChange = { telefono = it },
+                    onValueChange = { telefono = it.uppercase() },
                     label = { Text("Teléfono") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { email = it.uppercase() },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = direccion,
-                    onValueChange = { direccion = it },
+                    onValueChange = { direccion = it.uppercase() },
                     label = { Text("Dirección") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true

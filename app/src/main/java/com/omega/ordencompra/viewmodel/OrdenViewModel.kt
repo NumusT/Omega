@@ -96,10 +96,22 @@ class OrdenViewModel @Inject constructor(
     fun updateOrden(orden: OrdenEntity) {
         viewModelScope.launch {
             val oldEstado = _currentOrden.value?.estado
+            val newEstado = orden.estado
             repo.updateOrden(orden).onSuccess {
                 _currentOrden.value = orden
-                if (oldEstado != null && oldEstado != orden.estado) {
-                    registrarHistorial(orden.id, "Estado cambiado", "Estado: $oldEstado → ${orden.estado}")
+                if (oldEstado != null && oldEstado != newEstado) {
+                    if (newEstado.equals("Cancelada", ignoreCase = true) || newEstado.equals("rechazada", ignoreCase = true)) {
+                        repo.getProductosByOrdenIdOnce(orden.id).onSuccess { productos ->
+                            productos.forEach { prod ->
+                                repo.getCatalogoById(prod.productoCatalogoId).onSuccess { catProd ->
+                                    if (catProd != null) {
+                                        repo.updateProductoCatalogo(catProd.copy(stock = catProd.stock + prod.cantidad))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    registrarHistorial(orden.id, "Estado cambiado", "Estado: $oldEstado → $newEstado")
                 }
             }.onFailure { it.printStackTrace() }
         }
@@ -138,8 +150,13 @@ class OrdenViewModel @Inject constructor(
 
     fun duplicarOrden(ordenOriginal: OrdenEntity, productosOriginales: List<ProductoEntity>, usuarioId: String, onSuccess: (String) -> Unit = {}) {
         viewModelScope.launch {
-            val maxNumero = ordenes.value.mapNotNull { it.numeroOrden.toIntOrNull() }.maxOrNull() ?: 0
-            val numero = (maxNumero + 1).toString().padStart(4, '0')
+            val nextNumber = repo.getNextOrderNumber().getOrNull()
+            val numero = if (nextNumber != null) {
+                nextNumber.toString().padStart(4, '0')
+            } else {
+                val max = ordenes.value.mapNotNull { it.numeroOrden.toIntOrNull() }.maxOrNull() ?: 0
+                (max + 1).toString().padStart(4, '0')
+            }
             val nuevaOrden = OrdenEntity(
                 clienteId = ordenOriginal.clienteId,
                 clienteNombre = ordenOriginal.clienteNombre,
@@ -171,17 +188,12 @@ class OrdenViewModel @Inject constructor(
 
     fun crearOrden(clienteId: String, clienteNombre: String, usuarioId: String, productos: List<ProductoEntity>, total: Double, onSuccess: (String) -> Unit, onError: () -> Unit) {
         viewModelScope.launch {
-            val maxNumero = ordenes.value.mapNotNull { it.numeroOrden.toIntOrNull() }.maxOrNull() ?: 0
-            val numero = (maxNumero + 1).toString().padStart(4, '0')
-            
-            // Decrement stock for each product in the catalog
-            productos.forEach { prod ->
-                repo.getCatalogoById(prod.productoCatalogoId).onSuccess { catalogProd ->
-                    if (catalogProd != null) {
-                        val updatedStock = (catalogProd.stock - prod.cantidad).coerceAtLeast(0)
-                        repo.updateProductoCatalogo(catalogProd.copy(stock = updatedStock))
-                    }
-                }
+            val nextNumber = repo.getNextOrderNumber().getOrNull()
+            val numero = if (nextNumber != null) {
+                nextNumber.toString().padStart(4, '0')
+            } else {
+                val max = ordenes.value.mapNotNull { it.numeroOrden.toIntOrNull() }.maxOrNull() ?: 0
+                (max + 1).toString().padStart(4, '0')
             }
 
             val orden = OrdenEntity(
@@ -194,11 +206,24 @@ class OrdenViewModel @Inject constructor(
                 observaciones = "",
                 numeroOrden = numero
             )
-            insertOrdenWithProductos(orden, productos) { ordenId ->
-                viewModelScope.launch {
-                    registrarHistorial(ordenId, "Creada", "Orden creada con ${productos.size} producto(s). Total: $total")
+            repo.insertOrden(orden).onSuccess { ordenId ->
+                productos.forEach { producto ->
+                    repo.insertProducto(producto.copy(ordenId = ordenId))
                 }
+                // Decrement stock after order is confirmed
+                productos.forEach { prod ->
+                    repo.getCatalogoById(prod.productoCatalogoId).onSuccess { catalogProd ->
+                        if (catalogProd != null) {
+                            val updatedStock = (catalogProd.stock - prod.cantidad).coerceAtLeast(0)
+                            repo.updateProductoCatalogo(catalogProd.copy(stock = updatedStock))
+                        }
+                    }
+                }
+                _lastCreatedOrdenId.value = ordenId
+                registrarHistorial(ordenId, "Creada", "Orden creada con ${productos.size} producto(s). Total: $total")
                 onSuccess(ordenId)
+            }.onFailure {
+                onError()
             }
         }
     }
@@ -208,27 +233,34 @@ class OrdenViewModel @Inject constructor(
 
     fun loadTopProductos(ordenIds: List<String>) {
         viewModelScope.launch {
-            val productosMap = mutableMapOf<String, Pair<String, Int>>()
-            ordenIds.forEach { id ->
-                repo.getProductosByOrdenIdOnce(id).onSuccess { prods ->
-                    prods.forEach { p ->
-                        val current = productosMap[p.productoCatalogoId]
-                        productosMap[p.productoCatalogoId] = Pair(
-                            p.nombre,
-                            (current?.second ?: 0) + p.cantidad
-                        )
-                    }
+            repo.getProductosByOrdenIdsOnce(ordenIds).onSuccess { allProductos ->
+                val productosMap = mutableMapOf<String, Pair<String, Int>>()
+                allProductos.forEach { p ->
+                    val current = productosMap[p.productoCatalogoId]
+                    productosMap[p.productoCatalogoId] = Pair(
+                        p.nombre,
+                        (current?.second ?: 0) + p.cantidad
+                    )
                 }
+                _topProductos.value = productosMap.entries
+                    .map { (id, pair) -> id to pair.second }
+                    .sortedByDescending { it.second }
+                    .take(10)
             }
-            _topProductos.value = productosMap.entries
-                .map { (id, pair) -> id to pair.second }
-                .sortedByDescending { it.second }
-                .take(10)
         }
     }
 
     fun deleteOrden(orden: OrdenEntity) {
         viewModelScope.launch {
+            repo.getProductosByOrdenIdOnce(orden.id).onSuccess { productos ->
+                productos.forEach { prod ->
+                    repo.getCatalogoById(prod.productoCatalogoId).onSuccess { catProd ->
+                        if (catProd != null) {
+                            repo.updateProductoCatalogo(catProd.copy(stock = catProd.stock + prod.cantidad))
+                        }
+                    }
+                }
+            }
             repo.deleteProductosByOrdenId(orden.id)
             repo.deleteOrden(orden)
         }

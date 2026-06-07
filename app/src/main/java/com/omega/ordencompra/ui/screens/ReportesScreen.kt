@@ -1,5 +1,6 @@
 package com.omega.ordencompra.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,7 +32,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -105,19 +108,23 @@ fun ReportesScreen(
     val promedioOrden = if (cantidadOrdenes > 0) totalGastado / cantidadOrdenes else 0.0
     val proveedoresActivos = filteredOrdenes.distinctBy { it.clienteId }.size
 
-    // Gasto por proveedor
+    // Gasto por proveedor (top 10)
     val gastoPorProveedor = filteredOrdenes
         .groupBy { it.clienteId to it.clienteNombre }
         .map { (key, orders) ->
             Triple(key.second, orders.size, orders.sumOf { it.total })
         }
         .sortedByDescending { it.third }
+        .take(10)
 
     // Top productos
     val topProductos by ordenViewModel.topProductos.collectAsState()
     LaunchedEffect(filteredOrdenes) {
         ordenViewModel.loadTopProductos(filteredOrdenes.map { it.id })
     }
+
+    // Stock dialog state
+    var showStockDialog by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -254,10 +261,10 @@ fun ReportesScreen(
                 }
             }
 
-            // Gasto por proveedor
+            // Top 10 proveedores
             item {
                 Spacer(Modifier.height(8.dp))
-                Text("Gasto por Proveedor", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Top 10 Proveedores", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
 
             if (gastoPorProveedor.isEmpty()) {
@@ -348,8 +355,8 @@ fun ReportesScreen(
                 Text("Estado del Inventario", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             item {
-                val sinStock = catalogo.count { it.stock <= 0 }
-                val stockBajo = catalogo.count { it.stock in 1..9 }
+                val sinStock = catalogo.filter { it.stock <= 0 }
+                val stockBajo = catalogo.filter { it.stock in 1..9 }
                 val stockNormal = catalogo.count { it.stock >= 10 }
 
                 Row(
@@ -357,20 +364,20 @@ fun ReportesScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Card(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).clickable { showStockDialog = "sin" },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                     ) {
                         Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("$sinStock", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                            Text("${sinStock.size}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
                             Text("Sin Stock", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onErrorContainer)
                         }
                     }
                     Card(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).clickable { showStockDialog = "bajo" },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                     ) {
                         Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("$stockBajo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = OrangeWarning)
+                            Text("${stockBajo.size}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = OrangeWarning)
                             Text("Stock Bajo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer)
                         }
                     }
@@ -386,8 +393,42 @@ fun ReportesScreen(
                 }
             }
 
+
             item { Spacer(Modifier.height(80.dp)) }
         }
+
+    } // Scaffold
+
+    if (showStockDialog != null) {
+        val productos = when (showStockDialog) {
+            "sin" -> catalogo.filter { it.stock <= 0 }
+            "bajo" -> catalogo.filter { it.stock in 1..9 }
+            else -> emptyList()
+        }
+        AlertDialog(
+            onDismissRequest = { showStockDialog = null },
+            title = { Text(if (showStockDialog == "sin") "Sin Stock" else "Stock Bajo") },
+            text = {
+                Column {
+                    if (productos.isEmpty()) {
+                        Text("Ninguno")
+                    } else {
+                        productos.forEach { p ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(p.id, modifier = Modifier.weight(1f))
+                                Text("${p.stock}", color = if (showStockDialog == "sin") MaterialTheme.colorScheme.error else OrangeWarning)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showStockDialog = null }) { Text("Cerrar") }
+            }
+        )
     }
 }
 

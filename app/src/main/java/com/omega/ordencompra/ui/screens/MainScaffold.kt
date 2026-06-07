@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.HorizontalDivider
@@ -36,15 +37,15 @@ fun MainScaffold(
         BottomNavItem("Dashboard", Icons.Default.Dashboard),
         BottomNavItem("Pedidos", Icons.Default.ShoppingCart),
         BottomNavItem("Inventario", Icons.Default.Inventory2),
-        BottomNavItem("Clientes", Icons.Default.People)
+        BottomNavItem("Clientes", Icons.Default.People),
+        BottomNavItem("Pagos", Icons.Default.Payments)
     )
 
     Scaffold(
         topBar = {
             Column {
                 ProOrderTopBar(
-                    title = "ProcureTrack",
-                    avatarInitial = "U"
+                    title = "Omega"
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
             }

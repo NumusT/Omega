@@ -256,7 +256,7 @@ fun DetalleOrdenScreen(
                     item {
                         OutlinedTextField(
                             value = editObservaciones,
-                            onValueChange = { editObservaciones = it },
+                            onValueChange = { editObservaciones = it.uppercase() },
                             label = { Text("Observaciones") },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 2, maxLines = 4
@@ -655,7 +655,7 @@ private fun AddProductDialog(
             Column {
                 OutlinedTextField(
                     value = search,
-                    onValueChange = { search = it },
+                    onValueChange = { search = it.uppercase() },
                     placeholder = { Text("Buscar producto...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),

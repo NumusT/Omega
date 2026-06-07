@@ -157,7 +157,7 @@ fun GestionProductosScreen(
                 item {
                     OutlinedTextField(
                         value = search,
-                        onValueChange = { adminViewModel.searchCatalogo(it) },
+                        onValueChange = { adminViewModel.searchCatalogo(it.uppercase()) },
                         placeholder = { Text("Buscar por código...") },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
@@ -329,7 +329,7 @@ private fun ProductoDialog(
                 )
                 OutlinedTextField(
                     value = nombre,
-                    onValueChange = { nombre = it },
+                    onValueChange = { nombre = it.uppercase() },
                     label = { Text("Descripción") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true

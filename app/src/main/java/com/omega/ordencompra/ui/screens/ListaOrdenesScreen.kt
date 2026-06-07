@@ -141,7 +141,7 @@ fun ListaOrdenesScreen(
                     ) {
                         OutlinedTextField(
                             value = searchQuery,
-                            onValueChange = { searchQuery = it },
+                            onValueChange = { searchQuery = it.uppercase() },
                             placeholder = { Text("Buscar por OC o proveedor...") },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             modifier = Modifier.weight(1f),

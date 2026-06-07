@@ -69,7 +69,7 @@ fun CustomersScreen(
         item {
             OutlinedTextField(
                 value = search,
-                onValueChange = { adminViewModel.searchClientes(it) },
+                onValueChange = { adminViewModel.searchClientes(it.uppercase()) },
                 placeholder = { Text("Buscar por nombre...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),

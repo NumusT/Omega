@@ -60,7 +60,7 @@ fun InventoryScreen(
         item {
             OutlinedTextField(
                 value = search,
-                onValueChange = { adminViewModel.searchCatalogo(it) },
+                onValueChange = { adminViewModel.searchCatalogo(it.uppercase()) },
                 placeholder = { Text("Buscar por código...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),

@@ -46,9 +46,14 @@ object PdfGenerator {
 
         // Draw Logo at top left
         try {
-            val logoBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.logo)
-            val scaledLogo = Bitmap.createScaledBitmap(logoBitmap, 110, 55, true)
-            canvas.drawBitmap(scaledLogo, leftMargin, y, null)
+            val opts = BitmapFactory.Options().apply { inScaled = false }
+            val logoBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.logo, opts)
+            val aspect = logoBitmap.width.toFloat() / logoBitmap.height.toFloat()
+            val targetW = 100
+            val targetH = (targetW / aspect).toInt().coerceAtMost(50)
+            val logoPaint = Paint().apply { isFilterBitmap = true }
+            val dst = android.graphics.Rect(leftMargin.toInt(), y.toInt(), (leftMargin + targetW).toInt(), (y + targetH).toInt())
+            canvas.drawBitmap(logoBitmap, null, dst, logoPaint)
         } catch (e: Exception) {
             // Fallback: draw placeholder text in case logo resource fails to load
             val logoTextPaint = Paint().apply {

@@ -188,14 +188,14 @@ private fun UserDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = nombre,
-                    onValueChange = { nombre = it },
+                    onValueChange = { nombre = it.uppercase() },
                     label = { Text("Nombre completo") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = username,
-                    onValueChange = { username = it },
+                    onValueChange = { username = it.uppercase() },
                     label = { Text("Usuario") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true

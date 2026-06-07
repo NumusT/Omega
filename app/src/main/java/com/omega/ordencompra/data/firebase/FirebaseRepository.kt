@@ -268,6 +268,41 @@ class FirebaseRepository {
         }
     }
 
+    suspend fun getProductosByOrdenIdsOnce(ordenIds: List<String>): Result<List<ProductoEntity>> = runCatching {
+        val result = mutableListOf<ProductoEntity>()
+        ordenIds.chunked(30).forEach { batch ->
+            val snap = productosRef.whereIn("ordenId", batch).get().await()
+            snap.documents.mapNotNull { doc ->
+                try {
+                    ProductoEntity(
+                        id = doc.id,
+                        ordenId = doc.getString("ordenId") ?: "",
+                        productoCatalogoId = doc.getString("productoCatalogoId") ?: "",
+                        nombre = doc.getString("nombre") ?: "",
+                        cantidad = doc.getLong("cantidad")?.toInt() ?: 0,
+                        precioUnitario = doc.getDouble("precioUnitario")
+                            ?: doc.getLong("precioUnitario")?.toDouble()
+                            ?: 0.0,
+                        total = doc.getDouble("total")
+                            ?: doc.getLong("total")?.toDouble()
+                            ?: 0.0
+                    )
+                } catch (e: Exception) { null }
+            }.let { result.addAll(it) }
+        }
+        result
+    }
+
+    suspend fun getNextOrderNumber(): Result<Int> = runCatching {
+        val counterRef = db.collection("counters").document("ordenes")
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(counterRef)
+            val next = snapshot.getLong("nextNumber")?.toInt() ?: 1
+            transaction.set(counterRef, mapOf("nextNumber" to (next + 1)))
+            next
+        }.await()
+    }
+
     suspend fun insertHistorial(historial: HistorialEntity): Result<String> = runCatching {
         val doc = historialRef.add(historial).await()
         doc.id

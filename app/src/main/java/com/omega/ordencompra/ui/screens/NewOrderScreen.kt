@@ -2,6 +2,7 @@ package com.omega.ordencompra.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.platform.LocalContext
@@ -13,18 +14,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -121,11 +126,11 @@ fun NewOrderScreen(
 
         when (step) {
             1 -> StepSelectClient(
-                filteredClientes, clientSearch, { clientSearch = it }, { selectedCliente = it; step = 2 },
+                filteredClientes, clientSearch, { clientSearch = it.uppercase() }, { selectedCliente = it; step = 2 },
                 selectedCliente?.nombre
             )
             2 -> StepSelectProducts(
-                filteredProductos, productSearch, { productSearch = it }, cart,
+                filteredProductos,                 productSearch, { productSearch = it.uppercase() }, cart,
                 onAdd = { p ->
                     val existing = cart.indexOfFirst { it.producto.id == p.id }
                     val currentQty = if (existing >= 0) cart[existing].cantidad else 0
@@ -273,69 +278,171 @@ private fun StepSelectProducts(
     currencyFormat: java.text.NumberFormat,
     onNext: (() -> Unit)?
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Productos (${cart.size})", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                if (onNext != null) {
-                    Button(onClick = onNext) { Text("Siguiente") }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Productos (${cart.size})",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = search, onValueChange = onSearchChange,
+                    placeholder = { Text("Buscar productos...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryBlue) },
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.QrCodeScanner,
+                            contentDescription = "Escanear código",
+                            tint = PrimaryBlue,
+                            modifier = Modifier.clickable { }
+                        )
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+            }
+            items(productos, key = { it.id }) { producto ->
+                val inCart = cart.find { it.producto.id == producto.id }
+                val cartCantidad = inCart?.cantidad ?: 0
+                val hasStock = producto.stock > 0
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (inCart != null) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        else MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(1.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    producto.id.uppercase(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                if (producto.nombre.isNotBlank()) {
+                                    Text(
+                                        producto.nombre,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    currencyFormat.format(producto.precioUnitario),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PrimaryBlue
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(if (hasStock) GreenSuccess else MaterialTheme.colorScheme.error)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    if (hasStock) "Stock: ${producto.stock}" else "Sin stock",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (hasStock) GreenSuccess else MaterialTheme.colorScheme.error
+                                )
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = {
+                                        if (cartCantidad <= 1) onRemove(producto)
+                                        else onUpdateCantidad(producto.id, cartCantidad - 1)
+                                    },
+                                    enabled = cartCantidad > 0,
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Remove,
+                                        contentDescription = "Quitar",
+                                        tint = if (cartCantidad > 0) PrimaryBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Text(
+                                    "$cartCantidad",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.width(24.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                                IconButton(
+                                    onClick = { onAdd(producto) },
+                                    enabled = hasStock && cartCantidad < producto.stock,
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = "Agregar",
+                                        tint = if (hasStock && cartCantidad < producto.stock) PrimaryBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = search, onValueChange = onSearchChange,
-                placeholder = { Text("Buscar productos...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(), singleLine = true
-            )
+            item { Spacer(Modifier.height(72.dp)) }
         }
-        items(productos, key = { it.id }) { producto ->
-            val inCart = cart.find { it.producto.id == producto.id }
-            val cartCantidad = inCart?.cantidad ?: 0
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = if (inCart != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(1.dp)
+
+        if (onNext != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(producto.id.uppercase(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        if (producto.nombre.isNotBlank()) {
-                            Text(producto.nombre, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Text(currencyFormat.format(producto.precioUnitario), style = MaterialTheme.typography.bodyMedium)
-                        if (producto.stock > 0) Text("Stock: ${producto.stock}", style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        else Text("Sin stock", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (cartCantidad > 0) {
-                            IconButton(onClick = {
-                                if (cartCantidad <= 1) onRemove(producto)
-                                else onUpdateCantidad(producto.id, cartCantidad - 1)
-                            }) { Text("-", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge) }
-                            Text("$cartCantidad", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        }
-                        IconButton(onClick = { onAdd(producto) }) {
-                            Icon(Icons.Default.Add, contentDescription = "Agregar", tint = PrimaryBlue)
-                        }
+                    Text(
+                        "${cart.size} ${if (cart.size == 1) "producto" else "productos"} seleccionados",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Button(
+                        onClick = onNext,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                    ) {
+                        Text("Continuar", fontWeight = FontWeight.SemiBold)
+
                     }
                 }
             }
         }
-        item { Spacer(Modifier.height(80.dp)) }
     }
 }
 
