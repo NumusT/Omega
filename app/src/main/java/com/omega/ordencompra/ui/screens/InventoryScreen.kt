@@ -25,9 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -39,9 +37,6 @@ import com.omega.ordencompra.ui.theme.RedError
 import com.omega.ordencompra.viewmodel.AdminViewModel
 import java.text.NumberFormat
 import java.util.Locale
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
-import androidx.paging.compose.itemContentType
 
 @Composable
 fun InventoryScreen(
@@ -49,8 +44,13 @@ fun InventoryScreen(
     isAdmin: Boolean,
     onAddProduct: () -> Unit
 ) {
-    val productosPaging = adminViewModel.productosPagingFlow.collectAsLazyPagingItems()
+    val productos by adminViewModel.productos.collectAsState()
     val search by adminViewModel.searchQueryCatalogo.collectAsState()
+
+    val filteredProductos = if (search.isBlank()) productos
+    else productos.filter {
+        it.id.contains(search, ignoreCase = true) || it.nombre.contains(search, ignoreCase = true)
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -61,28 +61,21 @@ fun InventoryScreen(
             OutlinedTextField(
                 value = search,
                 onValueChange = { adminViewModel.searchCatalogo(it.uppercase()) },
-                placeholder = { Text("Buscar por código...") },
+                placeholder = { Text("Buscar por código o nombre...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
         }
-        
-        if (productosPaging.itemCount == 0 && search.isNotBlank() && productosPaging.loadState.append.endOfPaginationReached) {
+
+        if (filteredProductos.isEmpty() && search.isNotBlank()) {
             item {
                 Text("No se encontraron productos", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 32.dp))
             }
         } else {
-            items(
-                count = productosPaging.itemCount,
-                key = productosPaging.itemKey { it.id },
-                contentType = productosPaging.itemContentType { "CatalogoProductoEntity" }
-            ) { index ->
-                val producto = productosPaging[index]
-                if (producto != null) {
-                    ProductoInventarioCard(producto)
-                }
+            items(filteredProductos, key = { it.id }) { producto ->
+                ProductoInventarioCard(producto)
             }
         }
         if (isAdmin) {
@@ -96,30 +89,6 @@ fun InventoryScreen(
             }
         }
         item { Spacer(Modifier.height(80.dp)) }
-    }
-}
-
-@Composable
-private fun CustomFilterChip(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow
-        ),
-        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        modifier = Modifier.padding(end = 4.dp)
-    ) {
-        Text(
-            text = label,
-            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-        )
     }
 }
 
@@ -170,4 +139,3 @@ private fun ProductoInventarioCard(producto: CatalogoProductoEntity) {
         }
     }
 }
-
