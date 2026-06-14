@@ -21,7 +21,7 @@ data class PagoData(
 
 object PagoService {
     private const val WEBHOOK_URL =
-        "https://script.google.com/macros/s/AKfycbwlgUGN-lzBgA0s_VZMI7XS5_i9FBWB52003C4E8GJSThiriV0cRh1oJnoQVlwkedxOaw/exec"
+        "https://script.google.com/macros/s/AKfycbyRpWAL6tRSn-T0raKeI4zr0lFsRVWwhC9669u06CTkR-Q9skOPXdGrDr3kwgKdAgsR/exec"
 
     suspend fun enviarPago(pago: PagoData): Result<String> = withContext(Dispatchers.IO) {
         var conn: HttpURLConnection? = null
