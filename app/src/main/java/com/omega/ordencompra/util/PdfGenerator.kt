@@ -208,7 +208,7 @@ object PdfGenerator {
             textAlign = Paint.Align.RIGHT
         }
         val lightLinePaint = Paint().apply {
-            strokeWidth = 0.5f
+            strokeWidth = 1.5f
             color = lineLightColor
         }
 
@@ -233,6 +233,7 @@ object PdfGenerator {
         val startTotalsY = maxOf(rowY + 15f, 690f)
         var totalsY = startTotalsY
         val subtotal = orden.total
+        val totalPiezas = productos.sumOf { it.cantidad }
 
         val labelPaint = Paint().apply {
             textSize = 10f
@@ -246,7 +247,11 @@ object PdfGenerator {
 
         canvas.drawText("Subtotal", 340f, totalsY, labelPaint)
         canvas.drawText(currencyFormat.format(subtotal), rightMargin - 8f, totalsY, valuePaint)
-        totalsY += 16f
+        totalsY += 14f
+
+        canvas.drawText("Total piezas", 340f, totalsY, labelPaint)
+        canvas.drawText("$totalPiezas", rightMargin - 8f, totalsY, valuePaint)
+        totalsY += 14f
 
         // Dotted separator line
         val dottedPaint = Paint().apply {

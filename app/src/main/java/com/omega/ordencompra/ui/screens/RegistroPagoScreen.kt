@@ -196,11 +196,10 @@ fun RegistroPagoScreen(
             item {
                 OutlinedTextField(
                     value = notaEntrega,
-                    onValueChange = { notaEntrega = it.filter { c -> c.isDigit() } },
+                    onValueChange = { notaEntrega = it },
                     label = { Text("Nota de Entrega *") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    singleLine = true
                 )
             }
             item {
