@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.parcelize")
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     alias(libs.plugins.hilt.android)
@@ -15,8 +16,8 @@ android {
         applicationId = "com.omega.ordencompra"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "2.8"
+        versionCode = 30
+        versionName = "4.6"
     }
 
     buildTypes {
@@ -54,7 +55,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
-    implementation(libs.firebase.auth)
+    implementation(libs.firebase.messaging)
     debugImplementation(libs.androidx.ui.tooling)
     
     implementation(libs.hilt.android)
