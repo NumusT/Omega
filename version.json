@@ -1,7 +1,7 @@
 {
   "versionCode": 30,
   "versionName": "4.6",
-  "apkUrl": "https://github.com/NumusT/Omega/releases/download/v4.6/app-debug.apk",
+  "apkUrl": "https://github.com/NumusT/Omega/releases/download/v4.6/app-v4.6.apk",
   "forceUpdate": false,
   "changelog": "- Actualización de versión a v4.6\n- Correcciones y mejoras de rendimiento"
 }
