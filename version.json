@@ -1,7 +1,7 @@
 {
-  "versionCode": 32,
-  "versionName": "4.8",
-  "apkUrl": "https://github.com/NumusT/Omega/releases/download/v4.8/app-v4.8.apk",
+  "versionCode": 33,
+  "versionName": "4.9",
+  "apkUrl": "https://github.com/NumusT/Omega/releases/download/v4.9/app-v4.9.apk",
   "forceUpdate": false,
-  "changelog": "- Carga optimizada: ahora solo descarga las últimas 50 órdenes en lugar de todas\n- Correcciones y mejoras de rendimiento"
+  "changelog": "- Corregido: órdenes no cargaban al iniciar la app (cambio a Eagerly)\n- Carga optimizada: solo descarga últimas 50 órdenes\n- Correcciones y mejoras de rendimiento"
 }
