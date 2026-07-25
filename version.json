@@ -1,7 +1,7 @@
 {
-  "versionCode": 31,
-  "versionName": "4.7",
-  "apkUrl": "https://github.com/NumusT/Omega/releases/download/v4.7/app-v4.7.apk",
+  "versionCode": 32,
+  "versionName": "4.8",
+  "apkUrl": "https://github.com/NumusT/Omega/releases/download/v4.8/app-v4.8.apk",
   "forceUpdate": false,
-  "changelog": "- Actualización a v4.7\n- Correcciones y mejoras de rendimiento"
+  "changelog": "- Carga optimizada: ahora solo descarga las últimas 50 órdenes en lugar de todas\n- Correcciones y mejoras de rendimiento"
 }
