@@ -25,8 +25,8 @@ android {
         applicationId = "com.omega.ordencompra"
         minSdk = 26
         targetSdk = 36
-        versionCode = 33
-        versionName = "4.9"
+        versionCode = 34
+        versionName = "5.0"
     }
 
     signingConfigs {
