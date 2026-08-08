@@ -25,7 +25,7 @@ android {
         applicationId = "com.omega.ordencompra"
         minSdk = 26
         targetSdk = 36
-        versionCode = 34
+        versionCode = 35
         versionName = "5.0"
     }
 
